@@ -1,0 +1,16 @@
+{
+    "manifest_version" : 3,
+    "name" : "Talktuah",
+    "version" : "1.0",
+
+    "action" : {
+        "default_popup" : "index.html"
+    },
+    "permissions" : [
+        "scripting"
+    ],
+    "host_permissions" : [
+        "https://*/*",
+        "http://*/*"
+    ]
+}
