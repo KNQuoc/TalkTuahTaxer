@@ -1,16 +1,18 @@
 {
-    "manifest_version" : 3,
-    "name" : "Talktuah",
-    "version" : "1.0",
-
-    "action" : {
-        "default_popup" : "index.html"
-    },
-    "permissions" : [
-        "scripting"
+    "manifest_version": 3,
+    "name": "fanumtaxxer",
+    "version": "1.0",
+    "description": "Scrapes Amazon shopping cart details",
+    "permissions": ["activeTab"],
+    "content_scripts": [
+      {
+        "matches": ["https://www.amazon.com/cart?"],
+        "js": ["content.js"]
+      }
     ],
-    "host_permissions" : [
-        "https://*/*",
-        "http://*/*"
-    ]
-}
+    "action": {
+      "default_popup": "popup.html"
+    }
+  }
+
+  
