@@ -1,27 +1,27 @@
 {
-    "manifest_version": 1,
-    "name": "TalkTuahTaxer",
-    "version": "1.0.0",
-    "description": "Skibidi TalkTuahTaxer",
-    "permissions": [
+  "manifest_version": 3,
+  "name": "TalkTuahTaxer",
+  "version": "1.0.0",
+  "description": "Skibidi TalkTuahTaxer",
+  "permissions": [
       "activeTab",
       "storage",
       "webNavigation",
       "scripting"
-    ],
-    "host_permissions": [
+  ],
+  "host_permissions": [
       "*://*/*"
-    ],
-    "background": {
+  ],
+  "background": {
       "service_worker": "background.js"
-    },
-    "content_scripts": [
+  },
+  "content_scripts": [
       {
-        "matches": [""],
-        "js": ["content.js"]
+          "matches": ["<all_urls>"],
+          "js": ["content.js"]
       }
-    ],
-    "action": {
-      "default_popup": "popup/index.html"
-    }
+  ],
+  "action": {
+      "default_popup": "popup.html"
   }
+}

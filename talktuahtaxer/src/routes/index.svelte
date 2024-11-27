@@ -1,7 +1,9 @@
+<!-- src/routes/index.svelte -->
 <script lang="ts">
-  import MyComponent from '$lib/MyComponent.svelte';
+  export let name: string;
 </script>
 
 <main>
-  <MyComponent name="TalkTuahTaxer" />
+  <h1>Welcome to {name}!</h1>
+  <p>This is your Svelte application.</p>
 </main>
