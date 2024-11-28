@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "esnext",
+        "lib": ["dom", "esnext"],
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "jsx": "preserve",
+        "baseUrl": "./src",
+        "paths": {
+            "@/*": ["*"]
+        },
+        "types": ["vite/client", "svelte"]
+    },
+    "include": ["src/**/*", "types/**/*"],
+    "exclude": ["node_modules"]
+}
