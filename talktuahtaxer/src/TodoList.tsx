@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from "react";
 
 const TodoList = () => {
   const [tasks, setTasks] = useState<string[]>([]);
-  const [task, setTask] = useState<string>('');
+  const [task, setTask] = useState<string>("");
 
   const addTask = () => {
     if (task) {
       setTasks([...tasks, task]);
-      setTask('');
+      setTask("");
     }
   };
 
