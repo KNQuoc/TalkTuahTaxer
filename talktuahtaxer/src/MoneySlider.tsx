@@ -9,22 +9,32 @@ const MoneySlider = () => {
     setAmount(value[0]);
   };
 
-  // Calculate dynamic height for the slider track
   const getTrackHeight = () => {
-    const minHeight = 4; // Starting height in pixels
-    const maxHeight = 50; // Maximum height in pixels
+    const minHeight = 10;
+    const maxHeight = 75;
     const height = minHeight + (amount / 500) * (maxHeight - minHeight);
     return `${height}px`;
   };
 
+  const getHandleSize = () => {
+    const minSize = 50;
+    const maxSize = 125;
+    const size = minSize + (amount / 500) * (maxSize - minSize);
+    return `${size}px`;
+  };
+
+  const getHandleImage = () => {
+    return amount >= 400 ? "/CaseOh.jpg" : "/ChillGuy.jpeg";
+  };
+
   return (
-    <Card className="w-[400px] h-[250px] flex flex-col">
-      <CardHeader>
+    <Card className="w-[400px] h-[300px] flex flex-col">
+      <CardHeader className="pb-2">
         <CardTitle>Select Amount</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <div className="text-center text-4xl font-bold text-green-600">
+      <CardContent className="flex-1 flex flex-col justify-between pb-8">
+        <div className="space-y-8">
+          <div className="text-center text-5xl font-bold text-green-600 pt-4">
             ${amount}
           </div>
 
@@ -35,8 +45,24 @@ const MoneySlider = () => {
             }
             
             .dynamic-slider [role="slider"] {
-              height: ${parseInt(getTrackHeight()) + 8}px !important;
-              width: ${parseInt(getTrackHeight()) + 8}px !important;
+              height: ${getHandleSize()} !important;
+              width: ${getHandleSize()} !important;
+              background: none !important;
+              transition: all 0.3s ease;
+            }
+
+            .dynamic-slider [role="slider"]::after {
+              content: '';
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: ${getHandleSize()};
+              height: ${getHandleSize()};
+              background-image: url('${getHandleImage()}');
+              background-size: cover;
+              background-position: center;
+              border-radius: 50%;
               transition: all 0.3s ease;
             }
           `}</style>
