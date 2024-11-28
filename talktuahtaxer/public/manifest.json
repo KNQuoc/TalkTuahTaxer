@@ -1,0 +1,10 @@
+{
+    "name": "Talk Tuah Taxer",
+    "version": "1.0.0",
+    "description": "An extension.",
+    "manifest_version": 3,
+    "action": {
+        "default_popup": "index.html",
+        "default_title": "Talk Tuah Taxer"
+    }
+  }
