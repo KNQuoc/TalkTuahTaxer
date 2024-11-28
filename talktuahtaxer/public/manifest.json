@@ -8,13 +8,23 @@
         "default_title": "Talk Tuah Taxer"
     },
     "permissions": [
-        "activeTab", "scripting"
+        "activeTab", "scripting", "tabs"
     ],
-    "host_permissions": ["https://www.amazon.com/*"],
+    "host_permissions": [
+        "https://www.amazon.com/*"
+    ],
     "content_scripts": [
-        {   
-            "js": ["script.js"],
-            "matches": ["https://www.amazon.com/checkout/*"]
+        { 
+            "js": ["scripts/content.js"],
+            "matches": ["https://www.amazon.com/cart*"]
         }
-    ]
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "CaseOh.jpg", "ChillGuy.jpeg"
+            ],
+            "matches": ["<all_urls>"]
+        }
+    ]   
   }
