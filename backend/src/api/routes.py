@@ -1,38 +1,32 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
-from ..services.speech_service import SpeechService
-from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict
 import io
-import base64
-from ..core.models import AnalysisRequest, AnalysisResponse
-from ..services.speech_service import test_openai_connection
-from ..services.conversation_service import PersonaType
+from ..core.models import DebateResponse, ProductRequest
+from ..services.speech_service import test_openai_connection, SpeechService
 
-router = APIRouter(prefix="/v1")
+router = APIRouter()
 speech_service = SpeechService()
 
-class ProductRequest(BaseModel):
-    title: str
-    price: float
-    description: Optional[str] = None
-    previous_response: Optional[str] = None
-    responding_persona: Optional[str] = None
-
-class VoiceRequest(BaseModel):
-    text: str
-    voice: Optional[str] = None
-
-@router.post("/debate-purchase")
-async def debate_purchase(product: ProductRequest):
-    """Generate a debate between encouraging and discouraging personas"""
+@router.post("/debate", response_model=DebateResponse)
+async def start_or_continue_debate(product: ProductRequest):
+    """
+    Start or continue a debate about a product purchase.
+    If no previous_messages provided, starts a new debate.
+    If previous_messages provided, continues the existing debate.
+    """
     try:
-        persona = PersonaType(product.responding_persona) if product.responding_persona else None
+        
+        # Convert the Pydantic model to a dict
+        product_dict = {
+            "title": product.title,
+            "price": product.price,
+            "description": product.description
+        }
         
         response = await speech_service.generate_debate_response(
-            product.dict(),
-            product.previous_response,
-            persona
+            product_details=product_dict,
+            previous_messages=product.previous_messages
         )
         
         return JSONResponse({
@@ -43,54 +37,95 @@ async def debate_purchase(product: ProductRequest):
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to generate debate response: {str(e)}"
-        )
+            detail=str(e)
+        ) from e
 
-@router.post("/generate-speech-response")
-async def generate_speech_response(product: ProductRequest):
-    """
-    Generate and convert to speech both encouraging and discouraging responses
-    Returns both text and audio data for each response.
-    """
+@router.post("/start-debate")
+async def start_debate(product: ProductRequest):
+    """Start a new debate session"""
     try:
-        # First, generate the text responses
-        encourage, discourage = await speech_service.generate_devil_advocate_response({
-            "title": product.title,
-            "price": product.price,
-            "description": product.description
-        })
-
-        # Convert both responses to speech
-        encourage_speech = await speech_service.text_to_speech(encourage)
-        discourage_speech = await speech_service.text_to_speech(discourage)
-        
-        # Convert binary audio data to base64 for JSON response
-        encourage_audio_b64 = base64.b64encode(encourage_speech).decode('utf-8')
-        discourage_audio_b64 = base64.b64encode(discourage_speech).decode('utf-8')
-
-        # Return both text and audio data
-        return JSONResponse({
+        response = await speech_service.start_debate(product.dict())
+        return {
             "success": True,
-            "data": {
-                "text": {
-                    "encourage": encourage,
-                    "discourage": discourage
-                },
-                "audio": {
-                    "encourage": encourage_audio_b64,
-                    "discourage": discourage_audio_b64
-                }
-            }
-        })
-
+            "data": response
+        }
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to generate speech response: {str(e)}"
-        )
+            detail=str(e)
+        ) from e
+
+@router.post("/continue-debate/{session_id}")
+async def continue_debate(session_id: str):
+    """Continue an existing debate using stored history"""
+    try:
+        response = await speech_service.continue_debate(session_id)
+        return {
+            "success": True,
+            "data": response
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        ) from e
+
+@router.get("/debate-history/{session_id}")
+async def get_debate_history(session_id: str):
+    """Get the full conversation history for a debate"""
+    if session_id not in speech_service.conversation_history:
+        raise HTTPException(status_code=404, detail="Debate session not found")
+        
+    return {
+        "success": True,
+        "data": speech_service.conversation_history[session_id]
+    }
+
+# @router.post("/generate-speech-response")
+# async def generate_speech_response(product: ProductRequest):
+#     """
+#     Generate and convert to speech both encouraging and discouraging responses
+#     Returns both text and audio data for each response.
+#     """
+#     try:
+#         # First, generate the text responses
+#         encourage, discourage = await speech_service.generate_devil_advocate_response({
+#             "title": product.title,
+#             "price": product.price,
+#             "description": product.description
+#         })
+
+#         # Convert both responses to speech
+#         encourage_speech = await speech_service.text_to_speech(encourage)
+#         discourage_speech = await speech_service.text_to_speech(discourage)
+        
+#         # Convert binary audio data to base64 for JSON response
+#         encourage_audio_b64 = base64.b64encode(encourage_speech).decode('utf-8')
+#         discourage_audio_b64 = base64.b64encode(discourage_speech).decode('utf-8')
+
+#         # Return both text and audio data
+#         return JSONResponse({
+#             "success": True,
+#             "data": {
+#                 "text": {
+#                     "encourage": encourage,
+#                     "discourage": discourage
+#                 },
+#                 "audio": {
+#                     "encourage": encourage_audio_b64,
+#                     "discourage": discourage_audio_b64
+#                 }
+#             }
+#         })
+
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"Failed to generate speech response: {str(e)}"
+#         )
 
 @router.post("/text-to-speech")
-async def convert_text_to_speech(request: VoiceRequest):
+async def convert_text_to_speech(request):
     """Convert any text to speech using specified voice"""
     try:
         speech_data = await speech_service.text_to_speech(request.text, request.voice)
@@ -111,7 +146,7 @@ async def convert_text_to_speech(request: VoiceRequest):
         raise HTTPException(
             status_code=500,
             detail=str(e)
-        )
+        ) from e
 
 @router.get("/test-connection")
 async def test_connection():
@@ -127,17 +162,3 @@ async def test_connection():
             status_code=500,
             detail=f"OpenAI connection failed: {str(e)}"
         )
-
-@router.post("/chat/{session_id}")
-async def chat(session_id: str, message: str):
-    """Handles ongoing conversation with context"""
-    response_text = await speech_service.generate_response(session_id, message)
-    response_audio = await speech_service.text_to_speech(response_text)
-    
-    return {
-        "success": True,
-        "data": {
-            "text": response_text,
-            "audio": base64.b64encode(response_audio).decode('utf-8')
-        }
-    }

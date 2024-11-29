@@ -1,30 +1,22 @@
-from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
+from pydantic import BaseModel, Field
+from datetime import datetime
 
-class ProductData(BaseModel):
-    """Product information received from frontend"""
-    title: str
-    price: float
-    description: str
-    platform: str
-    url: str
+class ProductRequest(BaseModel):
+    """Request model for product analysis"""
+    title: str = Field(..., example="Sony WH-1000XM4 Headphones")
+    price: float = Field(..., example=349.99)
+    description: Optional[str] = Field(None, example="Premium noise-canceling headphones")
+    previous_messages: Optional[List[Dict[str, Any]]] = None
+    
+class DebateMessage(BaseModel):
+    """Structure for a single debate message"""
+    character: str
+    text: str
+    audio: str
+    timestamp: datetime
 
-class AnalysisRequest(BaseModel):
-    """Main request body structure"""
-    product: ProductData
-
-class CategoryResponse(BaseModel):
-    """Product categorization response"""
-    category: str
-    confidence: int
-    reasoning: str
-
-class AdvocateResponse(BaseModel):
-    """responses"""
-    encourage: str
-    discourage: str
-
-class AnalysisResponse(BaseModel):
-    """Complete analysis response"""
+class DebateResponse(BaseModel):
+    """Response model for debate endpoints"""
     success: bool
     data: Dict[str, Any]
