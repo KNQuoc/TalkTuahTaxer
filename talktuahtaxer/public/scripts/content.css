@@ -35,14 +35,20 @@
   cursor: pointer;
 }
 
+.popup .close-button:hover {
+  color: red; /* Change color when hovered */
+}
+
+/* Left image (Livvy's side) */
 .popup .left-image {
   margin-top: 200px;
   width: 200px;
   height: 400px;
   object-fit: cover;
   border-radius: 10px;
-} 
+}
 
+/* Right image (Kai's side) */
 .popup .right-image {
   margin-top: 200px;
   width: 200px;
@@ -51,25 +57,80 @@
   border-radius: 10px;
 }
 
+/* Left bubble (above Livvy's side) */
 .left-bubble {
   position: absolute;
-  top: 100px; /* Adjust to position above the left image */
+  top: 100px; /* Position above the left image */
   left: 120px; /* Align horizontally with the left image */
   width: 256px;
   height: 256px;
   object-fit: contain;
+  display: none; /* Initially hidden */
 }
 
-/* Right bubble */
+/* Right bubble (above Kai's side) */
 .right-bubble {
   position: absolute;
-  top: 100px; /* Adjust to position above the right image */
+  top: 100px; /* Position above the right image */
   right: 120px; /* Align horizontally with the right image */
   width: 256px;
   height: 256px;
   object-fit: contain;
+  display: none; /* Initially hidden */
 }
 
-.popup .close-button:hover {
-  color: red; /* Change color when hovered */
+/* Left text (below Livvy's image) */
+.popup .left-text {
+  position: absolute;
+  top: 190px; /* Adjust for proper spacing below the image */
+  left: 150px; /* Center below the left image */
+  width: 200px;
+  font-size: 18px;
+  font-weight: bold;
+  color: black;
+  text-align: center;
+}
+
+/* Right text (below Kai's image) */
+.popup .right-text {
+  position: absolute;
+  top: 190px; /* Adjust for proper spacing below the image */
+  right: 150px; /* Center below the right image */
+  width: 200px;
+  font-size: 18px;
+  font-weight: bold;
+  color: black;
+  text-align: center;
+}
+
+/* Fade-in effect */
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+/* Fade-out effect */
+.fade-out {
+  opacity: 1;
+  animation: fadeOut 1s forwards;
+}
+
+/* Keyframes for fade-in */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Keyframes for fade-out */
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }

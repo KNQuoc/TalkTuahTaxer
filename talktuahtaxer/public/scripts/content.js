@@ -16,11 +16,33 @@ leftImage.src = chrome.runtime.getURL('LivvyDunne.png'); // Path to the image
 leftImage.alt = 'Left Image';
 leftImage.classList.add('left-image'); // Add a CSS class for styles
 
-// Add left-side bubble 
+// Add left-side bubble
 const leftBubble = document.createElement('img');
 leftBubble.src = chrome.runtime.getURL('BubbleLeft.png'); // Path to the image
 leftBubble.alt = 'Left Bubble';
 leftBubble.classList.add('left-bubble'); // Add a CSS class for styles
+
+// Add a left-side text container
+const leftText = document.createElement('div');
+leftText.classList.add('left-text'); // CSS class for Livvy's text
+leftText.innerText = 'Waiting for Livvy...';
+
+// Add a right-side image
+const rightImage = document.createElement('img');
+rightImage.src = chrome.runtime.getURL('KaiCenat.jpg'); // Path to the image
+rightImage.alt = 'Right Image';
+rightImage.classList.add('right-image'); // Add a CSS class for styles
+
+// Add right-side bubble
+const rightBubble = document.createElement('img');
+rightBubble.src = chrome.runtime.getURL('BubbleRight.png'); // Path to the image
+rightBubble.alt = 'Right Bubble';
+rightBubble.classList.add('right-bubble'); // Add a CSS class for styles
+
+// Add a right-side text container
+const rightText = document.createElement('div');
+rightText.classList.add('right-text'); // CSS class for Kai's text
+rightText.innerText = 'Waiting for Kai...';
 
 // Add the text in the center
 const popupText = document.createElement('div');
@@ -31,18 +53,6 @@ popupText.style.fontSize = '24px';
 popupText.style.fontWeight = 'bold';
 popupText.style.color = 'black';
 
-// Add a right-side image
-const rightImage = document.createElement('img');
-rightImage.src = chrome.runtime.getURL('KaiCenat.jpg'); // You can use a different image
-rightImage.alt = 'Right Image';
-rightImage.classList.add('right-image'); // Add a CSS class for styles
-
-// Add right-side bubble
-const rightBubble = document.createElement('img');
-rightBubble.src = chrome.runtime.getURL('BubbleRight.png'); // Path to the image
-rightBubble.alt = 'Right Bubble';
-rightBubble.classList.add('right-bubble'); // Add a CSS class for styles
-
 // Add the "X" close button in the top-right corner
 const closeButton = document.createElement('button');
 closeButton.classList.add('close-button');
@@ -52,15 +62,19 @@ closeButton.onclick = () => {
   setTimeout(() => popup.remove(), 500); // Remove after fade-out
 };
 
-// Append everything to the popup
+// Append elements to the popup
 popup.appendChild(closeButton); // Add close button first to ensure it's on top
 popup.appendChild(leftImage);
 popup.appendChild(leftBubble);
+popup.appendChild(leftText); // Add Livvy's text container
 popup.appendChild(popupText);
 popup.appendChild(rightImage);
 popup.appendChild(rightBubble);
+popup.appendChild(rightText); // Add Kai's text container
 
-const sessionId = 'c21bc583-e6ba-4db3-9626-e8dfa6dd923f'; // Replace this with your session ID dynamically
+// Fetch data and display character messages
+const sessionId = '993f2736-88f2-455d-bc69-48ea09c65d5a'; // Replace this with your session ID dynamically
+
 fetch(`http://127.0.0.1:8000/api/v1/debate-history/${sessionId}`)
   .then((response) => {
     if (!response.ok) {
@@ -69,8 +83,83 @@ fetch(`http://127.0.0.1:8000/api/v1/debate-history/${sessionId}`)
     return response.json();
   })
   .then((data) => {
-    console.log('Data fetched successfully:', data);
+    const messages = data.data.messages || []; // Extract messages from the response
+    let currentIndex = 0;
+
+    function displayNextTurn() {
+      const message = messages[currentIndex];
+      if (!message) return;
+
+      // Clear bubbles and text containers before starting a new message
+      leftText.classList.remove('fade-in', 'fade-out');
+      rightText.classList.remove('fade-in', 'fade-out');
+      leftText.innerText = '';
+      rightText.innerText = '';
+      leftBubble.style.display = 'none';
+      rightBubble.style.display = 'none';
+
+      const words = message.text.split(' '); // Split the message text into words
+      const chunkSize = 5; // Number of words per chunk
+      let wordIndex = 0;
+
+      function displayWords() {
+        // Determine which side to display the text and bubble
+        if (message.character === 'Livvy') {
+          leftBubble.style.display = 'block';
+          rightBubble.style.display = 'none';
+
+          // Apply fade-out to previous text
+          leftText.classList.add('fade-out');
+          setTimeout(() => {
+            // Clear text and apply fade-in for new chunk
+            leftText.innerText = words.slice(wordIndex, wordIndex + chunkSize).join(' ');
+            leftText.classList.remove('fade-out');
+            leftText.classList.add('fade-in');
+          }, 500); // Fade-out duration
+        } else if (message.character === 'Kai') {
+          rightBubble.style.display = 'block';
+          leftBubble.style.display = 'none';
+
+          // Apply fade-out to previous text
+          rightText.classList.add('fade-out');
+          setTimeout(() => {
+            // Clear text and apply fade-in for new chunk
+            rightText.innerText = words.slice(wordIndex, wordIndex + chunkSize).join(' ');
+            rightText.classList.remove('fade-out');
+            rightText.classList.add('fade-in');
+          }, 500); // Fade-out duration
+        }
+
+        wordIndex += chunkSize;
+
+        if (wordIndex < words.length) {
+          // Continue displaying the next chunk
+          setTimeout(displayWords, 1000); // Adjust the delay between chunks (1 second here)
+        } else {
+          // Move to the next message after the last chunk is displayed
+          currentIndex++;
+          if (currentIndex < messages.length) {
+            setTimeout(displayNextTurn, 2000); // Wait 3 seconds before moving to the next turn
+          } else {
+            // Hide bubbles after the final message
+            setTimeout(() => {
+              leftBubble.style.display = 'none';
+              rightBubble.style.display = 'none';
+              console.log('All messages displayed.');
+            }, 1000);
+          }
+        }
+      }
+
+      // Start displaying chunks of words
+      displayWords();
+    }
+
+    // Start displaying turns
+    displayNextTurn();
   })
   .catch((error) => {
     console.error('Error fetching debate history:', error);
+    leftText.innerText = 'Failed to load Livvy\'s text.';
+    rightText.innerText = 'Failed to load Kai\'s text.';
   });

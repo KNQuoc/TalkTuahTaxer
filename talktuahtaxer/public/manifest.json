@@ -11,7 +11,7 @@
         "activeTab", "scripting", "tabs"
     ],
     "host_permissions": [
-        "https://www.amazon.com/*"
+        "https://www.amazon.com/*", "http://127.0.0.1:8000/*"
     ],
     "content_scripts": [
         { 
