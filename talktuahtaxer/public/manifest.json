@@ -8,16 +8,23 @@
         "default_title": "Talk Tuah Taxer"
     },
     "permissions": [
-        "activeTab", "scripting", "tabs"
+        "activeTab", 
+        "scripting", 
+        "tabs",
+        "storage"
     ],
     "host_permissions": [
-        "https://www.amazon.com/*", "http://127.0.0.1:8000/*"
+        "http://127.0.0.1:8000/*",
+        "https://www.amazon.com/*"
     ],
     "content_scripts": [
         { 
             "js": ["scripts/content.js"],
             "css": ["scripts/content.css"],
-            "matches": ["https://www.amazon.com/cart*"]
+            "matches": [
+                "https://www.amazon.com/gp/cart*",
+                "https://www.amazon.com/cart*"
+            ]
         }
     ],
     "web_accessible_resources": [
