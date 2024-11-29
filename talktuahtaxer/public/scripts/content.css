@@ -5,7 +5,11 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 10000;
-  background: white;
+  background-color: white;
+  background: url("Background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   border: 1px solid black;
   padding: 40px;
   border-radius: 10px;
@@ -77,6 +81,7 @@
   height: 256px;
   object-fit: contain;
   display: none; /* Initially hidden */
+  transform: scaleX(-1);
 }
 
 /* Left text (below Livvy's image) */

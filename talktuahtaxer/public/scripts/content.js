@@ -1,6 +1,8 @@
 // Create a div for the popup
 const popup = document.createElement('div');
 popup.classList.add('popup'); // Add the CSS class for styles
+popup.style.backgroundImage = `url('${chrome.runtime.getURL('Background.png')}')`;
+popup.style.backgroundColor = 'white'; // Add a fallback background color
 
 // Append the popup to the body
 document.body.appendChild(popup);
@@ -29,13 +31,13 @@ leftText.innerText = 'Waiting for Livvy...';
 
 // Add a right-side image
 const rightImage = document.createElement('img');
-rightImage.src = chrome.runtime.getURL('KaiCenat.jpg'); // Path to the image
+rightImage.src = chrome.runtime.getURL('KaiCenat.png'); // Path to the image
 rightImage.alt = 'Right Image';
 rightImage.classList.add('right-image'); // Add a CSS class for styles
 
 // Add right-side bubble
 const rightBubble = document.createElement('img');
-rightBubble.src = chrome.runtime.getURL('BubbleRight.png'); // Path to the image
+rightBubble.src = chrome.runtime.getURL('BubbleLeft.png'); // Path to the image
 rightBubble.alt = 'Right Bubble';
 rightBubble.classList.add('right-bubble'); // Add a CSS class for styles
 
@@ -83,10 +85,22 @@ fetch(`http://127.0.0.1:8000/api/v1/debate-history/${sessionId}`)
     return response.json();
   })
   .then((data) => {
-    const messages = data.data.messages || []; // Extract messages from the response
+    const messages = data.data.messages || [];
     let currentIndex = 0;
 
-    function displayNextTurn() {
+    function playAudio(base64Audio) {
+      if (!base64Audio) return;
+      
+      // Convert base64 to audio
+      const audio = new Audio();
+      audio.src = `data:audio/mp3;base64,${base64Audio}`;
+      
+      return audio.play().catch(error => {
+        console.error('Error playing audio:', error);
+      });
+    }
+
+    async function displayNextTurn() {
       const message = messages[currentIndex];
       if (!message) return;
 
@@ -98,50 +112,47 @@ fetch(`http://127.0.0.1:8000/api/v1/debate-history/${sessionId}`)
       leftBubble.style.display = 'none';
       rightBubble.style.display = 'none';
 
-      const words = message.text.split(' '); // Split the message text into words
-      const chunkSize = 5; // Number of words per chunk
+      // Play audio if available in the message
+      if (message.audio) {
+        await playAudio(message.audio);
+      }
+
+      const words = message.text.split(' ');
+      const chunkSize = 5;
       let wordIndex = 0;
 
       function displayWords() {
-        // Determine which side to display the text and bubble
         if (message.character === 'Livvy') {
           leftBubble.style.display = 'block';
           rightBubble.style.display = 'none';
 
-          // Apply fade-out to previous text
           leftText.classList.add('fade-out');
           setTimeout(() => {
-            // Clear text and apply fade-in for new chunk
             leftText.innerText = words.slice(wordIndex, wordIndex + chunkSize).join(' ');
             leftText.classList.remove('fade-out');
             leftText.classList.add('fade-in');
-          }, 500); // Fade-out duration
+          }, 500);
         } else if (message.character === 'Kai') {
           rightBubble.style.display = 'block';
           leftBubble.style.display = 'none';
 
-          // Apply fade-out to previous text
           rightText.classList.add('fade-out');
           setTimeout(() => {
-            // Clear text and apply fade-in for new chunk
             rightText.innerText = words.slice(wordIndex, wordIndex + chunkSize).join(' ');
             rightText.classList.remove('fade-out');
             rightText.classList.add('fade-in');
-          }, 500); // Fade-out duration
+          }, 500);
         }
 
         wordIndex += chunkSize;
 
         if (wordIndex < words.length) {
-          // Continue displaying the next chunk
-          setTimeout(displayWords, 1000); // Adjust the delay between chunks (1 second here)
+          setTimeout(displayWords, 1000);
         } else {
-          // Move to the next message after the last chunk is displayed
           currentIndex++;
           if (currentIndex < messages.length) {
-            setTimeout(displayNextTurn, 2000); // Wait 3 seconds before moving to the next turn
+            setTimeout(displayNextTurn, 2000);
           } else {
-            // Hide bubbles after the final message
             setTimeout(() => {
               leftBubble.style.display = 'none';
               rightBubble.style.display = 'none';
@@ -151,7 +162,6 @@ fetch(`http://127.0.0.1:8000/api/v1/debate-history/${sessionId}`)
         }
       }
 
-      // Start displaying chunks of words
       displayWords();
     }
 

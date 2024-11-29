@@ -23,7 +23,7 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "CaseOh.jpg", "ChillGuy.jpeg", "LivvyDunne.png", "KaiCenat.jpg", "BubbleLeft.png", "BubbleRight.png"
+                "CaseOh.jpg", "ChillGuy.jpeg", "LivvyDunne.png", "KaiCenat.png", "BubbleLeft.png", "BubbleRight.png", "Background.png"
             ],
             "matches": ["<all_urls>"]
         }
