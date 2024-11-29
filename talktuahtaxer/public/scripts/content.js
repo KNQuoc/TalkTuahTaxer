@@ -77,6 +77,9 @@ function showPopup(cartData) {
     const popup = document.createElement('div');
     popup.classList.add('popup');
 
+    popup.style.backgroundImage = `url('${chrome.runtime.getURL('Background.png')}')`;
+    popup.style.backgroundColor = 'white'; // Add a fallback background color
+
     // Add a close button
     const closeButton = document.createElement('button');
     closeButton.classList.add('close-button');
@@ -109,13 +112,13 @@ function showPopup(cartData) {
 
     // Add right-side image
     const rightImage = document.createElement('img');
-    rightImage.src = chrome.runtime.getURL('KaiCenat.jpg');
+    rightImage.src = chrome.runtime.getURL('KaiCenat.png');
     rightImage.alt = 'Right Image';
     rightImage.classList.add('right-image');
 
     // Add right-side bubble
     const rightBubble = document.createElement('img');
-    rightBubble.src = chrome.runtime.getURL('BubbleRight.png');
+    rightBubble.src = chrome.runtime.getURL('BubbleLeft.png');
     rightBubble.alt = 'Right Bubble';
     rightBubble.classList.add('right-bubble');
 
