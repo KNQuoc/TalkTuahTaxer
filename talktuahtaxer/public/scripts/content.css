@@ -1,12 +1,75 @@
-#talktuah-taxer-popup {
+/* Styles for the popup */
+.popup {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 2147483647;
+  z-index: 10000;
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid black;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  text-align: center;
+  width: 1200px;
+  height: 800px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  opacity: 0; /* Start transparent for fade-in effect */
+  transition: opacity 0.5s ease-in-out; /* Smooth fade-in */
+}
+
+/* Styles for the "X" close button */
+.popup .close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
   font-size: 24px;
+  font-weight: bold;
+  color: black;
+  cursor: pointer;
+}
+
+.popup .left-image {
+  margin-top: 200px;
+  width: 200px;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 10px;
+} 
+
+.popup .right-image {
+  margin-top: 200px;
+  width: 200px;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.left-bubble {
+  position: absolute;
+  top: 100px; /* Adjust to position above the left image */
+  left: 120px; /* Align horizontally with the left image */
+  width: 256px;
+  height: 256px;
+  object-fit: contain;
+}
+
+/* Right bubble */
+.right-bubble {
+  position: absolute;
+  top: 100px; /* Adjust to position above the right image */
+  right: 120px; /* Align horizontally with the right image */
+  width: 256px;
+  height: 256px;
+  object-fit: contain;
+}
+
+.popup .close-button:hover {
+  color: red; /* Change color when hovered */
 }

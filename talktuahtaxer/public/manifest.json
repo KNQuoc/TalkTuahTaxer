@@ -16,13 +16,14 @@
     "content_scripts": [
         { 
             "js": ["scripts/content.js"],
+            "css": ["scripts/content.css"],
             "matches": ["https://www.amazon.com/cart*"]
         }
     ],
     "web_accessible_resources": [
         {
             "resources": [
-                "CaseOh.jpg", "ChillGuy.jpeg"
+                "CaseOh.jpg", "ChillGuy.jpeg", "LivvyDunne.png", "KaiCenat.jpg", "BubbleLeft.png", "BubbleRight.png"
             ],
             "matches": ["<all_urls>"]
         }

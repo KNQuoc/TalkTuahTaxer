@@ -1,31 +1,26 @@
 // Create a div for the popup
 const popup = document.createElement('div');
-popup.style.position = 'fixed';
-popup.style.top = '50%';
-popup.style.left = '50%';
-popup.style.transform = 'translate(-50%, -50%)'; // Center the popup
-popup.style.zIndex = '10000';
-popup.style.background = 'white';
-popup.style.border = '1px solid black';
-popup.style.padding = '40px';
-popup.style.borderRadius = '10px';
-popup.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.2)';
-popup.style.fontFamily = 'Arial, sans-serif';
-popup.style.fontSize = '20px';
-popup.style.textAlign = 'center';
-popup.style.width = '600px'; // Make popup wider
-popup.style.display = 'flex';
-popup.style.justifyContent = 'space-between';
-popup.style.alignItems = 'center';
+popup.classList.add('popup'); // Add the CSS class for styles
+
+// Append the popup to the body
+document.body.appendChild(popup);
+
+// Trigger the fade-in effect after appending the popup
+setTimeout(() => {
+  popup.style.opacity = '1'; // Fully visible
+}, 10);
 
 // Add a left-side image
 const leftImage = document.createElement('img');
-leftImage.src = chrome.runtime.getURL('ChillGuy.jpeg'); // Local left image
+leftImage.src = chrome.runtime.getURL('LivvyDunne.png'); // Path to the image
 leftImage.alt = 'Left Image';
-leftImage.style.width = '150px';
-leftImage.style.height = '150px';
-leftImage.style.objectFit = 'cover'; // Maintain aspect ratio
-leftImage.style.borderRadius = '10px';
+leftImage.classList.add('left-image'); // Add a CSS class for styles
+
+// Add left-side bubble 
+const leftBubble = document.createElement('img');
+leftBubble.src = chrome.runtime.getURL('BubbleLeft.png'); // Path to the image
+leftBubble.alt = 'Left Bubble';
+leftBubble.classList.add('left-bubble'); // Add a CSS class for styles
 
 // Add the text in the center
 const popupText = document.createElement('div');
@@ -38,33 +33,29 @@ popupText.style.color = 'black';
 
 // Add a right-side image
 const rightImage = document.createElement('img');
-rightImage.src = chrome.runtime.getURL('CaseOh.jpg'); // Local right image
+rightImage.src = chrome.runtime.getURL('KaiCenat.jpg'); // You can use a different image
 rightImage.alt = 'Right Image';
-rightImage.style.width = '150px';
-rightImage.style.height = '150px';
-rightImage.style.objectFit = 'cover'; // Maintain aspect ratio
-rightImage.style.borderRadius = '10px';
+rightImage.classList.add('right-image'); // Add a CSS class for styles
 
-// Add a close button below the popup
+// Add right-side bubble
+const rightBubble = document.createElement('img');
+rightBubble.src = chrome.runtime.getURL('BubbleRight.png'); // Path to the image
+rightBubble.alt = 'Right Bubble';
+rightBubble.classList.add('right-bubble'); // Add a CSS class for styles
+
+// Add the "X" close button in the top-right corner
 const closeButton = document.createElement('button');
-closeButton.innerText = 'Close';
-closeButton.style.marginTop = '20px';
-closeButton.style.padding = '10px 20px';
-closeButton.style.cursor = 'pointer';
-closeButton.style.border = 'none';
-closeButton.style.borderRadius = '5px';
-closeButton.style.background = '#007bff';
-closeButton.style.color = 'white';
-closeButton.style.fontSize = '16px';
+closeButton.classList.add('close-button');
+closeButton.innerText = 'X';
 closeButton.onclick = () => {
-  popup.remove();
+  popup.style.opacity = '0'; // Start fading out
+  setTimeout(() => popup.remove(), 500); // Remove after fade-out
 };
 
 // Append everything to the popup
+popup.appendChild(closeButton); // Add close button first to ensure it's on top
 popup.appendChild(leftImage);
+popup.appendChild(leftBubble);
 popup.appendChild(popupText);
 popup.appendChild(rightImage);
-document.body.appendChild(popup);
-
-// Add the close button below the popup
-popup.appendChild(closeButton);
+popup.appendChild(rightBubble);
