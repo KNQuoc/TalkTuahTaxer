@@ -24,34 +24,38 @@ async function scrapeAmazonCart() {
 
                     // Send data to backend
                     try {
-                        const response = await fetch('http://127.0.0.1:8000/api/v1/start-debate', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                title: name,
+                        chrome.storage.local.get(['sliderAmount'], async function(result){
+                            const sliderAmount = result.sliderAmount || 0;
+
+                            const response = await fetch('http://127.0.0.1:8000/api/v1/start-debate', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    title: name,
+                                    price: price,
+                                    threshold: sliderAmount
+                                })
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+    
+                            const debateData = await response.json();
+                            console.log('Debate started for product:', { name, price }, 'Response:', debateData);
+    
+                            // Call showPopup with the debate data
+                            showPopup(debateData);
+    
+                            productList.push({
+                                name: name,
                                 price: price,
-                                description: null,
-                                previous_messages: null
-                            })
+                                debateData: debateData
+                            });
                         });
-
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-
-                        const debateData = await response.json();
-                        console.log('Debate started for product:', { name, price }, 'Response:', debateData);
-
-                        // Call showPopup with the debate data
-                        showPopup(debateData);
-
-                        productList.push({
-                            name: name,
-                            price: price,
-                            debateData: debateData
-                        });
+                        
                     } catch (fetchError) {
                         console.error('Error sending data to backend:', fetchError);
                     }

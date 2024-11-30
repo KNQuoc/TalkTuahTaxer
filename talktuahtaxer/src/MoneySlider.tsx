@@ -7,6 +7,14 @@ const MoneySlider = () => {
 
   const handleSliderChange = (value: number[]) => {
     setAmount(value[0]);
+    // Save to Chrome storage
+    try {
+      if (chrome?.storage?.local) {
+        chrome.storage.local.set({ 'sliderAmount': value[0] });
+      }
+    } catch (error) {
+      console.log('Chrome storage not available:', error);
+    }
   };
 
   const getTrackHeight = () => {
