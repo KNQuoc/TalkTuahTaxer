@@ -137,8 +137,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 300px; /* Adjust width */
-  height: 300px; /* Adjust height */
+  width: 500px; /* Adjust width */
+  height: 500px; /* Adjust height */
   object-fit: cover; /* Ensure the image maintains aspect ratio */
   border-radius: 10px; /* Optional: Add rounded corners */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Optional: Add shadow */
@@ -154,7 +154,7 @@
 
 .popup .overlay-text {
   position: absolute;
-  top: 50%; /* Center vertically */
+  top: 30%; /* Center vertically */
   left: 50%; /* Center horizontally */
   transform: translate(-50%, -50%);
   font-size: 24px; /* Adjust text size */
