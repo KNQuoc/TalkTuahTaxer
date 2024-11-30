@@ -24,7 +24,7 @@ async function scrapeAmazonCart() {
 
                     // Send data to backend
                     try {
-                        chrome.storage.local.get(['sliderAmount'], async function(result){
+                        chrome.storage.local.get(['sliderAmount'], async function (result) {
                             const sliderAmount = result.sliderAmount || 0;
 
                             const response = await fetch('http://127.0.0.1:8000/api/v1/start-debate', {
@@ -42,20 +42,20 @@ async function scrapeAmazonCart() {
                             if (!response.ok) {
                                 throw new Error(`HTTP error! status: ${response.status}`);
                             }
-    
+
                             const debateData = await response.json();
                             console.log('Debate started for product:', { name, price }, 'Response:', debateData);
-    
+
                             // Call showPopup with the debate data
                             showPopup(debateData);
-    
+
                             productList.push({
                                 name: name,
                                 price: price,
                                 debateData: debateData
                             });
                         });
-                        
+
                     } catch (fetchError) {
                         console.error('Error sending data to backend:', fetchError);
                     }
@@ -149,16 +149,21 @@ async function scrapeAmazonCart() {
 //     }, 10);
 // }
 
-function showPopup(debateData) {
-    console.log('Creating popup with data:', debateData);
+// Function to stream and play audio
 
-    const messages = debateData.data.responses || [];
-    let currentIndex = 0;
+function showPopup(debateData) {
+    let currentAudio = null;
+    let isClosing = false;
+    console.log('Creating popup with Full debate data:', debateData);
+
+    // Store session ID from the debate data
+    const sessionId = debateData.session_id;
+    console.log('Using session ID:', sessionId);
 
     // Create a div for the popup
     const popup = document.createElement('div');
     popup.classList.add('popup');
-
+    popup.style.opacity = '0';
     popup.style.backgroundImage = `url('${chrome.runtime.getURL('Background.png')}')`;
     popup.style.backgroundColor = 'white'; // Add a fallback background color
 
@@ -168,9 +173,10 @@ function showPopup(debateData) {
     closeButton.innerText = 'X';
     closeButton.onclick = () => {
         // Stop current audio if playing
+        isClosing = true;
         if (currentAudio) {
             currentAudio.pause();
-            currentAudio.currentTime = 0;
+            currentAudio.src = '';
             currentAudio = null;
         }
 
@@ -179,6 +185,12 @@ function showPopup(debateData) {
         for (let i = 0; i < highestTimeoutId; i++) {
             clearTimeout(i);
         }
+
+        // Clear all text and hide bubbles
+        leftText.innerText = '';
+        rightText.innerText = '';
+        leftBubble.style.display = 'none';
+        rightBubble.style.display = 'none';
 
         // Fade out and remove popup
         popup.style.opacity = '0';
@@ -247,180 +259,239 @@ function showPopup(debateData) {
     popup.appendChild(leftText);
     popup.appendChild(rightText);
 
-    let currentAudio = null;
+    async function streamAndPlayAudio(sessionId, character) {
+        if (isClosing) return;
+        try {
+            console.log(`Getting audio for session ${sessionId}, character ${character}`);
 
-    // Function to play audio and wait for it to finish
-    function playAudio(base64Audio) {
-        return new Promise((resolve, reject) => {
-            if (!base64Audio) {
-                resolve();
-                return;
+            const response = await fetch(`http://127.0.0.1:8000/api/v1/get-audio/${sessionId}/${character}`, {
+                headers: {
+                    'Accept': 'audio/mpeg'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const audio = new Audio();
-            audio.src = `data:audio/mp3;base64,${base64Audio}`;
+            const blob = await response.blob();
+            const audioUrl = URL.createObjectURL(blob);
+            const audio = new Audio(audioUrl);
+            currentAudio = audio; // Store reference to current audio
 
-            currentAudio = audio;
+            return new Promise((resolve, reject) => {
+                audio.onended = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    currentAudio = null;
+                    resolve();
+                };
 
-            audio.onended = () => {
-                console.log('Audio finished playing');
-                resolve();
-            };
+                audio.onerror = (error) => {
+                    URL.revokeObjectURL(audioUrl);
+                    currentAudio = null;
+                    reject(error);
+                };
 
-            audio.onerror = (error) => {
-                console.error('Error playing audio:', error);
-                resolve();
-            };
-
-            audio.play().catch(error => {
-                console.error('Error playing audio:', error);
-                resolve();
+                audio.play().catch(error => {
+                    URL.revokeObjectURL(audioUrl);
+                    currentAudio = null;
+                    reject(error);
+                });
             });
-        });
+        } catch (error) {
+            console.error(`Error streaming audio for ${character}:`, error);
+            throw error;
+        }
     }
 
-    // Function to display text gradually
+    // Add the new displayText function
     async function displayText(message, textContainer, bubble) {
         return new Promise((resolve) => {
-            bubble.style.display = 'block';
+            // bubble.style.display = 'block';
             const words = message.text.split(' ');
             let currentWord = 0;
 
             function addWord() {
                 if (currentWord < words.length) {
                     if (currentWord === 0) {
-                        textContainer.innerText = words[currentWord];
+                        textContainer.innerText = words.slice(0, 5).join(' ');
+                        currentWord = 5;
                     } else {
                         textContainer.innerText += ' ' + words[currentWord];
+                        currentWord++;
                     }
-
-                    // Auto scroll to bottom whenever new text is added
                     textContainer.scrollTop = textContainer.scrollHeight;
-
-                    currentWord++;
-                    setTimeout(addWord, 350); // Adjust speed of word display here
+                    // currentWord++;
+                    setTimeout(addWord, 350);
                 } else {
                     resolve();
                 }
             }
-
             addWord();
+            // setTimeout(addWord, 3000);
         });
     }
 
-    // Function to handle a single character's message
-    async function displayMessage(message) {
-      // Reset all bubbles and text
-      leftText.innerText = '';
-      rightText.innerText = '';
-      leftBubble.style.display = 'none';
-      rightBubble.style.display = 'none';
-  
-      const textContainer = message.character === 'Livvy' ? leftText : rightText;
-      const bubble = message.character === 'Livvy' ? leftBubble : rightBubble;
-  
-      // Start both audio and text display simultaneously
-      const audioPromise = playAudio(message.audio);
-      const textPromise = displayText(message, textContainer, bubble);
-  
-      // Wait for both to finish
-      await Promise.all([audioPromise, textPromise]);
-  
-      // Hide bubble and text after a delay when the message is finished
-      setTimeout(() => {
-          bubble.style.display = 'none';
-          textContainer.innerText = '';
-      }, 1000); // Adjust this delay if needed
-  }
-
-    // Function to handle the entire conversation
-    async function displayConversation() {
-      const messageArray = [
-          { character: 'Livvy', ...messages.encourage },
-          { character: 'Kai', ...messages.discourage }
-      ];
-  
-      for (const message of messageArray) {
-          await displayMessage(message);
-      }
-  
-      // After the conversation, display Yes and No buttons
-      displayDecisionButtons();
-  }
-  
-  // Function to display Yes and No buttons
-  function displayDecisionButtons() {
-    console.log('Displaying decision buttons');
-
-    // Create a container for the image and text
-    const imageContainer = document.createElement('div');
-    imageContainer.classList.add('image-container'); // Add class for styling
-
-    // Create a new image for the center
-    const centerImage = document.createElement('img');
-    centerImage.src = chrome.runtime.getURL('CaseOh.jpg'); // Replace with your image file
-    centerImage.alt = 'Center Image';
-    centerImage.classList.add('center-image'); // Add class for styling
-
-    // Create text to overlay on the image
-    const overlayText = document.createElement('div');
-    overlayText.innerText = 'Get Fanum Taxed??'; // Replace with your text
-    overlayText.classList.add('overlay-text'); // Add class for styling
-
-    // Append the text and image to the container
-    imageContainer.appendChild(centerImage);
-    imageContainer.appendChild(overlayText);
-
-    // Create a container for the buttons
-    const buttonContainer = document.createElement('div');
-    buttonContainer.classList.add('button-container'); // Add container for styling
-
-    // Create Yes button
-    const yesButton = document.createElement('button');
-    yesButton.innerText = 'Yes';
-    yesButton.classList.add('yes-button'); // Add class for styling
-    yesButton.onclick = () => {
-        console.log('Yes button clicked');
-        alert('You chose Yes! Proceeding to purchase...');
-        popup.remove(); // Remove the popup after the decision
-        window.location.href = '/checkout'; // Redirect to the checkout page
-    };
-
-    // Create No button
-    const noButton = document.createElement('button');
-    noButton.innerText = 'No';
-    noButton.classList.add('no-button'); // Add class for styling
-    noButton.onclick = () => {
-        console.log('No button clicked');
-        if (document.referrer) {
-            console.log('Redirecting to:', document.referrer);
-            window.location.href = document.referrer; // Redirect to the referring page
-        } else {
-            console.log('No referrer found, redirecting to homepage');
-            window.location.href = '/'; // Fallback to the homepage if no referrer is available
+    async function handleCharacterTurn(character, text) {
+        try {
+            const textContainer = character === 'Livvy' ? leftText : rightText;
+            const bubble = character === 'Livvy' ? leftBubble : rightBubble;
+    
+            // Prepare audio first
+            const audioPromise = streamAndPlayAudio(debateData.session_id, character.toLowerCase());
+            
+            // Only now show the popup when audio is ready
+            if (character === 'Livvy') {
+                // Wait for audio to be ready
+                await new Promise(resolve => {
+                    const checkAudio = setInterval(() => {
+                        if (currentAudio && currentAudio.readyState >= 3) {
+                            clearInterval(checkAudio);
+                            document.body.appendChild(popup);
+                            popup.style.opacity = '1';
+                            bubble.style.display = 'block';
+                            resolve();
+                        }
+                    }, 100);
+                });
+            } else {
+                bubble.style.display = 'block';
+            }
+    
+            // Start both audio and text display
+            const textPromise = displayText({ text, character }, textContainer, bubble);
+            await Promise.all([audioPromise, textPromise]);
+    
+            // Hide bubble and text after completing
+            if (!isClosing) {
+                bubble.style.display = 'none';
+                textContainer.innerText = '';
+            }
+    
+        } catch (error) {
+            console.error(`Error during ${character}'s turn:`, error);
+            if (!isClosing) {
+                const textContainer = character === 'Livvy' ? leftText : rightText;
+                textContainer.innerText = `Error playing ${character}'s response. Please try again.`;
+            }
         }
-    };
+    }
 
-    // Append buttons to the container
-    buttonContainer.appendChild(yesButton);
-    buttonContainer.appendChild(noButton);
+    // Add the new startConversation function
+    async function startConversation() {
+        if (isClosing) return;
+        try {
+            console.log('Debug - Responses structure:', debateData); // Add this
 
-    // Append the image container and button container to the popup
-    popup.appendChild(imageContainer);
-    popup.appendChild(buttonContainer);
+            // Based on your API response structure, modify this:
+            const encourageText = debateData.encourage?.text;  // Changed from debateData.data.responses.encourage.text
+            const discourageText = debateData.discourage?.text;
 
-    console.log('Buttons, center image, and text added to the popup');
-}
+            if (!encourageText || !discourageText) {
+                throw new Error('Missing response text from API');
+            }
+
+            // Show Livvy's response first
+            await handleCharacterTurn('Livvy', encourageText);
+            if (isClosing) return;
+
+            // Wait a moment before Kai's response
+            await new Promise(resolve => setTimeout(resolve, 500));
+            if (isClosing) return;
+
+            // Show Kai's response
+            await handleCharacterTurn('Kai', discourageText);
+            if (isClosing) return;
+
+            // Clear bubbles and text before showing decision buttons
+            leftBubble.style.display = 'none';
+            rightBubble.style.display = 'none';
+            leftText.innerText = '';
+            rightText.innerText = '';
+
+            // Show decision buttons after both characters are done
+            displayDecisionButtons();
+
+        } catch (error) {
+            console.error('Error in conversation:', error);
+            console.log('Debug - Data structure:', debateData);
+        }
+    }
+
+    // Function to display Yes and No buttons
+    function displayDecisionButtons() {
+        console.log('Displaying decision buttons');
+
+        // Create a container for the image and text
+        const imageContainer = document.createElement('div');
+        imageContainer.classList.add('image-container'); // Add class for styling
+
+        // Create a new image for the center
+        const centerImage = document.createElement('img');
+        centerImage.src = chrome.runtime.getURL('CaseOh.jpg'); // Replace with your image file
+        centerImage.alt = 'Center Image';
+        centerImage.classList.add('center-image'); // Add class for styling
+
+        // Create text to overlay on the image
+        const overlayText = document.createElement('div');
+        overlayText.innerText = 'Get Fanum Taxed??'; // Replace with your text
+        overlayText.classList.add('overlay-text'); // Add class for styling
+
+        // Append the text and image to the container
+        imageContainer.appendChild(centerImage);
+        imageContainer.appendChild(overlayText);
+
+        // Create a container for the buttons
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('button-container'); // Add container for styling
+
+        // Create Yes button
+        const yesButton = document.createElement('button');
+        yesButton.innerText = 'Yes';
+        yesButton.classList.add('yes-button'); // Add class for styling
+        yesButton.onclick = () => {
+            console.log('Yes button clicked');
+            alert('You chose Yes! Proceeding to purchase...');
+            popup.remove(); // Remove the popup after the decision
+            window.location.href = '/checkout'; // Redirect to the checkout page
+        };
+
+        // Create No button
+        const noButton = document.createElement('button');
+        noButton.innerText = 'No';
+        noButton.classList.add('no-button'); // Add class for styling
+        noButton.onclick = () => {
+            console.log('No button clicked');
+            if (document.referrer) {
+                console.log('Redirecting to:', document.referrer);
+                window.location.href = document.referrer; // Redirect to the referring page
+            } else {
+                console.log('No referrer found, redirecting to homepage');
+                window.location.href = '/'; // Fallback to the homepage if no referrer is available
+            }
+        };
+
+        // Append buttons to the container
+        buttonContainer.appendChild(yesButton);
+        buttonContainer.appendChild(noButton);
+
+        // Append the image container and button container to the popup
+        popup.appendChild(imageContainer);
+        popup.appendChild(buttonContainer);
+
+        console.log('Buttons, center image, and text added to the popup');
+    }
 
 
     // Append popup to body
-    document.body.appendChild(popup);
+    // document.body.appendChild(popup);
 
-    // Start the conversation
-    setTimeout(() => {
-        popup.style.opacity = '1';
-        displayConversation();
-    }, 10);
+    // // Start the conversation
+    // setTimeout(() => {
+    //     popup.style.opacity = '1';
+    //     startConversation();
+    // }, 10);
+    startConversation();
 }
 
 // Function to initialize
