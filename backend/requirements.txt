@@ -2,3 +2,4 @@ fastapi[standard]==0.115.5
 openai==1.55.2
 playwright==1.18
 pydantic-settings==2.6.1
+elevenlabs==1.13.1

@@ -8,30 +8,56 @@ from ..services.speech_service import test_openai_connection, SpeechService
 router = APIRouter()
 speech_service = SpeechService()
 
-@router.post("/debate", response_model=DebateResponse)
-async def start_or_continue_debate(product: ProductRequest):
-    """
-    Start or continue a debate about a product purchase.
-    If no previous_messages provided, starts a new debate.
-    If previous_messages provided, continues the existing debate.
-    """
+# @router.post("/debate", response_model=DebateResponse)
+# async def start_or_continue_debate(product: ProductRequest):
+#     """
+#     Start or continue a debate about a product purchase.
+#     If no previous_messages provided, starts a new debate.
+#     If previous_messages provided, continues the existing debate.
+#     """
+#     try:
+        
+#         # Convert the Pydantic model to a dict
+#         product_dict = {
+#             "title": product.title,
+#             "price": product.price,
+#             "description": product.description
+#         }
+        
+#         response = await speech_service.generate_debate_response(
+#             product_details=product_dict,
+#             previous_messages=product.previous_messages
+#         )
+        
+#         return JSONResponse({
+#             "success": True,
+#             "data": response
+#         })
+        
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500,
+#             detail=str(e)
+#         ) from e
+
+@router.post("/start-debate")
+async def start_debate(product: ProductRequest):
+    """Start a new debate session"""
     try:
+        response = await speech_service.start_debate(product.dict())
         
-        # Convert the Pydantic model to a dict
-        product_dict = {
-            "title": product.title,
-            "price": product.price,
-            "description": product.description
-        }
-        
-        response = await speech_service.generate_debate_response(
-            product_details=product_dict,
-            previous_messages=product.previous_messages
-        )
-        
+        # Return a StreamingResponse for the audio
         return JSONResponse({
             "success": True,
-            "data": response
+            "session_id": response["session_id"],
+            "encourage": {
+                "text": response["responses"]["encourage"]["text"],
+                "character": "Livvy"
+            },
+            "discourage": {
+                "text": response["responses"]["discourage"]["text"],
+                "character": "Kai"
+            }
         })
         
     except Exception as e:
@@ -39,21 +65,43 @@ async def start_or_continue_debate(product: ProductRequest):
             status_code=500,
             detail=str(e)
         ) from e
-
-@router.post("/start-debate")
-async def start_debate(product: ProductRequest):
-    """Start a new debate session"""
+        
+@router.get("/get-audio/{session_id}/{character}")
+async def get_audio(session_id: str, character: str):
+    """Get audio stream for a specific character's response"""
     try:
-        response = await speech_service.start_debate(product.dict())
-        return {
-            "success": True,
-            "data": response
-        }
+        if session_id not in speech_service.conversation_history:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        session = speech_service.conversation_history[session_id]
+        messages = session["messages"]
+        
+        # Get the latest message for the requested character
+        character_message = next(
+            (msg for msg in reversed(messages) 
+             if msg["character"].lower() == character.lower()),
+            None
+        )
+        
+        if not character_message:
+            raise HTTPException(status_code=404, detail="No message found for character")
+
+        # Generate audio stream
+        audio_stream = await speech_service.elevenlabs.generate_streaming_audio(
+            character_message["text"],
+            character.lower()
+        )
+
+        return StreamingResponse(
+            audio_stream,
+            media_type="audio/mpeg",
+            headers={
+                "Content-Disposition": f"attachment; filename={character.lower()}_response.mp3"
+            }
+        )
+
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        ) from e
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/continue-debate/{session_id}")
 async def continue_debate(session_id: str):
