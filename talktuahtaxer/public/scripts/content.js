@@ -108,7 +108,7 @@ function showPopup(cartData) {
     popupText.style.margin = '0 20px';
     popupText.style.fontSize = '24px';
     popupText.style.fontWeight = 'bold';
-    popupText.style.color = 'black';
+    popupText.style.color = 'white';
 
     // Add right-side image
     const rightImage = document.createElement('img');
