@@ -221,24 +221,7 @@ function showPopup(debateData) {
         element.style.lineHeight = '1.2';
         element.style.padding = '10px';
         element.style.top = '130px';
-
-        // Add custom scrollbar styling
-        element.style.scrollbarWidth = 'thin';  // For Firefox
-        element.style.scrollbarColor = '#888 transparent';  // For Firefox
-
-        // Style the scrollbar for webkit browsers (Chrome, Safari)
-        element.style.cssText += `
-        &::-webkit-scrollbar {
-            width: 6px;
-        }
-        &::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        &::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 3px;
-        }
-    `;
+        element.style.scrollbarBehavior = 'smooth';
 
         if (isLeft) {
             element.style.left = '130px';
@@ -306,6 +289,10 @@ function showPopup(debateData) {
                     } else {
                         textContainer.innerText += ' ' + words[currentWord];
                     }
+
+                    // Auto scroll to bottom whenever new text is added
+                    textContainer.scrollTop = textContainer.scrollHeight;
+
                     currentWord++;
                     setTimeout(addWord, 350); // Adjust speed of word display here
                 } else {
