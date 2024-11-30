@@ -1,20 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
 import { Slider } from "./components/ui/slider";
 
 const MoneySlider = () => {
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState<number>(0);
+  const [sliderValue, setSliderValue] = useState<number[]>([0]); // State for slider's value
+
+  // Load the stored value when the component mounts
+  useEffect(() => {
+    const storedAmount = localStorage.getItem("sliderAmount");
+    if (storedAmount) {
+      const value = Number(storedAmount);
+      setAmount(value);
+      setSliderValue([value]); // Sync slider position with loaded value
+    }
+  }, []);
+
+  // Save the slider value whenever it changes
+  useEffect(() => {
+    localStorage.setItem("sliderAmount", amount.toString());
+  }, [amount]);
 
   const handleSliderChange = (value: number[]) => {
     setAmount(value[0]);
-    // Save to Chrome storage
-    try {
-      if (chrome?.storage?.local) {
-        chrome.storage.local.set({ 'sliderAmount': value[0] });
-      }
-    } catch (error) {
-      console.log('Chrome storage not available:', error);
-    }
+    setSliderValue(value); // Update slider position
   };
 
   const getTrackHeight = () => {
@@ -77,7 +86,7 @@ const MoneySlider = () => {
 
           <div className="dynamic-slider">
             <Slider
-              defaultValue={[0]}
+              value={sliderValue} // Sync slider position with state
               max={500}
               step={1}
               onValueChange={handleSliderChange}
