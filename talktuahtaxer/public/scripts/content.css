@@ -108,6 +108,85 @@
   text-align: center;
 }
 
+/* Styles for the button container */
+.popup .button-container {
+  position: absolute;
+  bottom: 50px; /* Position at the bottom of the popup */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px; /* Space between buttons */
+  justify-content: center;
+  align-items: center;
+}
+
+/* Shared styles for Yes and No buttons */
+.popup .button-container button {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Center image styles */
+.popup .center-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px; /* Adjust width */
+  height: 300px; /* Adjust height */
+  object-fit: cover; /* Ensure the image maintains aspect ratio */
+  border-radius: 10px; /* Optional: Add rounded corners */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Optional: Add shadow */
+}
+
+/* Overlay text on center image */
+.popup .image-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 0 auto;
+}
+
+.popup .overlay-text {
+  position: absolute;
+  top: 50%; /* Center vertically */
+  left: 50%; /* Center horizontally */
+  transform: translate(-50%, -50%);
+  font-size: 24px; /* Adjust text size */
+  font-weight: bold;
+  color: white; /* Text color */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6); /* Optional: Add text shadow */
+  text-align: center;
+  pointer-events: none; /* Ensure text doesn't interfere with clicks */
+}
+
+/* Yes button styles */
+.popup .button-container .yes-button {
+  background-color: #4caf50; /* Green color */
+  color: white;
+}
+
+.popup .button-container .yes-button:hover {
+  background-color: #45a049;
+  transform: scale(1.1);
+}
+
+/* No button styles */
+.popup .button-container .no-button {
+  background-color: #f44336; /* Red color */
+  color: white;
+}
+
+.popup .button-container .no-button:hover {
+  background-color: #e53935;
+  transform: scale(1.1);
+}
+
 /* Fade-in effect */
 .fade-in {
   opacity: 0;

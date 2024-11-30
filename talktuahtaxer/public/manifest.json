@@ -19,7 +19,7 @@
     ],
     "content_scripts": [
         { 
-            "js": ["scripts/content.js"],
+            "js": ["scripts/content.js", "scripts/waitingDonPollo.js"],
             "css": ["scripts/content.css"],
             "matches": [
                 "https://www.amazon.com/gp/cart*",
@@ -30,7 +30,7 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "CaseOh.jpg", "ChillGuy.jpeg", "LivvyDunne.png", "KaiCenat.png", "BubbleLeft.png", "BubbleRight.png", "Background.png"
+                "CaseOh.jpg", "ChillGuy.jpeg", "LivvyDunne.png", "KaiCenat.png", "BubbleLeft.png", "BubbleRight.png", "Background.png", "DonPollo.mp4"
             ],
             "matches": ["<all_urls>"]
         }

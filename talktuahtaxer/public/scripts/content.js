@@ -306,37 +306,107 @@ function showPopup(debateData) {
 
     // Function to handle a single character's message
     async function displayMessage(message) {
-        // Clear previous text and bubbles
-        leftText.innerText = '';
-        rightText.innerText = '';
-        leftBubble.style.display = 'none';
-        rightBubble.style.display = 'none';
-
-        const textContainer = message.character === 'Livvy' ? leftText : rightText;
-        const bubble = message.character === 'Livvy' ? leftBubble : rightBubble;
-
-        // Start both audio and text display simultaneously
-        const audioPromise = playAudio(message.audio);
-        const textPromise = displayText(message, textContainer, bubble);
-
-        // Wait for both to finish
-        await Promise.all([audioPromise, textPromise]);
-
-        // Add a small delay after both finish
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+      // Reset all bubbles and text
+      leftText.innerText = '';
+      rightText.innerText = '';
+      leftBubble.style.display = 'none';
+      rightBubble.style.display = 'none';
+  
+      const textContainer = message.character === 'Livvy' ? leftText : rightText;
+      const bubble = message.character === 'Livvy' ? leftBubble : rightBubble;
+  
+      // Start both audio and text display simultaneously
+      const audioPromise = playAudio(message.audio);
+      const textPromise = displayText(message, textContainer, bubble);
+  
+      // Wait for both to finish
+      await Promise.all([audioPromise, textPromise]);
+  
+      // Hide bubble and text after a delay when the message is finished
+      setTimeout(() => {
+          bubble.style.display = 'none';
+          textContainer.innerText = '';
+      }, 1000); // Adjust this delay if needed
+  }
 
     // Function to handle the entire conversation
     async function displayConversation() {
-        const messageArray = [
-            { character: 'Livvy', ...messages.encourage },
-            { character: 'Kai', ...messages.discourage }
-        ];
+      const messageArray = [
+          { character: 'Livvy', ...messages.encourage },
+          { character: 'Kai', ...messages.discourage }
+      ];
+  
+      for (const message of messageArray) {
+          await displayMessage(message);
+      }
+  
+      // After the conversation, display Yes and No buttons
+      displayDecisionButtons();
+  }
+  
+  // Function to display Yes and No buttons
+  function displayDecisionButtons() {
+    console.log('Displaying decision buttons');
 
-        for (const message of messageArray) {
-            await displayMessage(message);
+    // Create a container for the image and text
+    const imageContainer = document.createElement('div');
+    imageContainer.classList.add('image-container'); // Add class for styling
+
+    // Create a new image for the center
+    const centerImage = document.createElement('img');
+    centerImage.src = chrome.runtime.getURL('CaseOh.jpg'); // Replace with your image file
+    centerImage.alt = 'Center Image';
+    centerImage.classList.add('center-image'); // Add class for styling
+
+    // Create text to overlay on the image
+    const overlayText = document.createElement('div');
+    overlayText.innerText = 'Get Fanum Taxed??'; // Replace with your text
+    overlayText.classList.add('overlay-text'); // Add class for styling
+
+    // Append the text and image to the container
+    imageContainer.appendChild(centerImage);
+    imageContainer.appendChild(overlayText);
+
+    // Create a container for the buttons
+    const buttonContainer = document.createElement('div');
+    buttonContainer.classList.add('button-container'); // Add container for styling
+
+    // Create Yes button
+    const yesButton = document.createElement('button');
+    yesButton.innerText = 'Yes';
+    yesButton.classList.add('yes-button'); // Add class for styling
+    yesButton.onclick = () => {
+        console.log('Yes button clicked');
+        alert('You chose Yes! Proceeding to purchase...');
+        popup.remove(); // Remove the popup after the decision
+    };
+
+    // Create No button
+    const noButton = document.createElement('button');
+    noButton.innerText = 'No';
+    noButton.classList.add('no-button'); // Add class for styling
+    noButton.onclick = () => {
+        console.log('No button clicked');
+        if (document.referrer) {
+            console.log('Redirecting to:', document.referrer);
+            window.location.href = document.referrer; // Redirect to the referring page
+        } else {
+            console.log('No referrer found, redirecting to homepage');
+            window.location.href = '/'; // Fallback to the homepage if no referrer is available
         }
-    }
+    };
+
+    // Append buttons to the container
+    buttonContainer.appendChild(yesButton);
+    buttonContainer.appendChild(noButton);
+
+    // Append the image container and button container to the popup
+    popup.appendChild(imageContainer);
+    popup.appendChild(buttonContainer);
+
+    console.log('Buttons, center image, and text added to the popup');
+}
+
 
     // Append popup to body
     document.body.appendChild(popup);
