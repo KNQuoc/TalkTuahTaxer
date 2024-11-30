@@ -383,6 +383,7 @@ function showPopup(debateData) {
         console.log('Yes button clicked');
         alert('You chose Yes! Proceeding to purchase...');
         popup.remove(); // Remove the popup after the decision
+        window.location.href = '/checkout'; // Redirect to the checkout page
     };
 
     // Create No button
