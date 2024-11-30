@@ -213,7 +213,7 @@ class SpeechService:
         """
         try:
             response = await self.client.audio.speech.create(
-                model="tts-1",  # The text-to-speech model
+                model="tts-1-hd",  # The text-to-speech model
                 voice=voice,
                 input=text
             )
