@@ -44,6 +44,9 @@ async function scrapeAmazonCart() {
                         const debateData = await response.json();
                         console.log('Debate started for product:', { name, price }, 'Response:', debateData);
 
+                        // Call showPopup with the debate data
+                        showPopup(debateData);
+
                         productList.push({
                             name: name,
                             price: price,
@@ -69,9 +72,84 @@ async function scrapeAmazonCart() {
     }
 }
 
-// Function to create and show popup with your exact existing structure
-function showPopup(cartData) {
-    console.log('Creating popup with cart data:', cartData);
+// Function to create and show popup
+// function showPopup(cartData) {
+//     console.log('Creating popup with cart data:', cartData);
+
+//     // Create a div for the popup
+//     const popup = document.createElement('div');
+//     popup.classList.add('popup');
+
+//     popup.style.backgroundImage = `url('${chrome.runtime.getURL('Background.png')}')`;
+//     popup.style.backgroundColor = 'white'; // Add a fallback background color
+
+//     // Add a close button
+//     const closeButton = document.createElement('button');
+//     closeButton.classList.add('close-button');
+//     closeButton.innerText = 'X';
+//     closeButton.onclick = () => {
+//         popup.style.opacity = '0';
+//         setTimeout(() => popup.remove(), 500);
+//     };
+
+//     // Add left-side image
+//     const leftImage = document.createElement('img');
+//     leftImage.src = chrome.runtime.getURL('LivvyDunne.png');
+//     leftImage.alt = 'Left Image';
+//     leftImage.classList.add('left-image');
+
+//     // Add left-side bubble
+//     const leftBubble = document.createElement('img');
+//     leftBubble.src = chrome.runtime.getURL('BubbleLeft.png');
+//     leftBubble.alt = 'Left Bubble';
+//     leftBubble.classList.add('left-bubble');
+
+//     // Add the text in the center
+//     const popupText = document.createElement('div');
+//     popupText.innerText = `Your cart total is $${cartData.total.toFixed(2)}. Do you really want to purchase this?`;
+//     popupText.style.flex = '1';
+//     popupText.style.margin = '0 20px';
+//     popupText.style.fontSize = '24px';
+//     popupText.style.fontWeight = 'bold';
+//     popupText.style.color = 'white';
+
+//     // Add right-side image
+//     const rightImage = document.createElement('img');
+//     rightImage.src = chrome.runtime.getURL('KaiCenat.png');
+//     rightImage.alt = 'Right Image';
+//     rightImage.classList.add('right-image');
+
+//     // Add right-side bubble
+//     const rightBubble = document.createElement('img');
+//     rightBubble.src = chrome.runtime.getURL('BubbleLeft.png');
+//     rightBubble.alt = 'Right Bubble';
+//     rightBubble.classList.add('right-bubble');
+
+//     // Append everything to the popup
+//     popup.appendChild(closeButton);
+//     popup.appendChild(leftImage);
+//     popup.appendChild(leftBubble);
+//     popup.appendChild(popupText);
+//     popup.appendChild(rightImage);
+//     popup.appendChild(rightBubble);
+
+//     // Append the popup to the body
+//     document.body.appendChild(popup);
+
+//     console.log('Popup created and appended to body');
+
+//     // Trigger the fade-in effect after appending
+//     setTimeout(() => {
+//         popup.style.opacity = '1';
+//         console.log('Popup fade-in triggered');
+//     }, 10);
+// }
+
+function showPopup(debateData) {
+    console.log('Creating popup with data:', debateData);
+
+    const messages = debateData.data.responses || [];
+    let currentIndex = 0;
 
     // Create a div for the popup
     const popup = document.createElement('div');
@@ -80,65 +158,206 @@ function showPopup(cartData) {
     popup.style.backgroundImage = `url('${chrome.runtime.getURL('Background.png')}')`;
     popup.style.backgroundColor = 'white'; // Add a fallback background color
 
-    // Add a close button
+    // Add close button
     const closeButton = document.createElement('button');
     closeButton.classList.add('close-button');
     closeButton.innerText = 'X';
     closeButton.onclick = () => {
+        // Stop current audio if playing
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+        }
+
+        // Clear any ongoing timeouts
+        const highestTimeoutId = setTimeout(() => { });
+        for (let i = 0; i < highestTimeoutId; i++) {
+            clearTimeout(i);
+        }
+
+        // Fade out and remove popup
         popup.style.opacity = '0';
         setTimeout(() => popup.remove(), 500);
     };
 
-    // Add left-side image
+    // Add images and bubbles
     const leftImage = document.createElement('img');
     leftImage.src = chrome.runtime.getURL('LivvyDunne.png');
     leftImage.alt = 'Left Image';
     leftImage.classList.add('left-image');
 
-    // Add left-side bubble
-    const leftBubble = document.createElement('img');
-    leftBubble.src = chrome.runtime.getURL('BubbleLeft.png');
-    leftBubble.alt = 'Left Bubble';
-    leftBubble.classList.add('left-bubble');
-
-    // Add the text in the center
-    const popupText = document.createElement('div');
-    popupText.innerText = `Your cart total is $${cartData.total.toFixed(2)}. Do you really want to purchase this?`;
-    popupText.style.flex = '1';
-    popupText.style.margin = '0 20px';
-    popupText.style.fontSize = '24px';
-    popupText.style.fontWeight = 'bold';
-    popupText.style.color = 'white';
-
-    // Add right-side image
     const rightImage = document.createElement('img');
     rightImage.src = chrome.runtime.getURL('KaiCenat.png');
     rightImage.alt = 'Right Image';
     rightImage.classList.add('right-image');
 
-    // Add right-side bubble
+    const leftBubble = document.createElement('img');
+    leftBubble.src = chrome.runtime.getURL('BubbleLeft.png');
+    leftBubble.alt = 'Left Bubble';
+    leftBubble.classList.add('left-bubble');
+    leftBubble.style.display = 'none';
+
     const rightBubble = document.createElement('img');
     rightBubble.src = chrome.runtime.getURL('BubbleLeft.png');
     rightBubble.alt = 'Right Bubble';
     rightBubble.classList.add('right-bubble');
+    rightBubble.style.display = 'none';
+    rightBubble.style.transform = 'scaleX(-1)';
 
-    // Append everything to the popup
+    // Add text containers for each character
+    const leftText = document.createElement('div');
+    const rightText = document.createElement('div');
+
+    // Add the text styling function
+    function setTextStyles(element, isLeft) {
+        element.style.position = 'absolute';
+        element.style.width = '220px';
+        element.style.maxHeight = '130px';
+        element.style.textAlign = 'center';
+        element.style.overflow = 'auto';
+        element.style.wordWrap = 'break-word';
+        element.style.fontSize = '16px';
+        element.style.lineHeight = '1.2';
+        element.style.padding = '10px';
+        element.style.top = '130px';
+
+        // Add custom scrollbar styling
+        element.style.scrollbarWidth = 'thin';  // For Firefox
+        element.style.scrollbarColor = '#888 transparent';  // For Firefox
+
+        // Style the scrollbar for webkit browsers (Chrome, Safari)
+        element.style.cssText += `
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+    `;
+
+        if (isLeft) {
+            element.style.left = '130px';
+        } else {
+            element.style.right = '130px';
+        }
+    }
+
+    // Apply styles to text containers
+    setTextStyles(leftText, true);
+    setTextStyles(rightText, false);
+
+    // Append everything to popup
     popup.appendChild(closeButton);
     popup.appendChild(leftImage);
-    popup.appendChild(leftBubble);
-    popup.appendChild(popupText);
     popup.appendChild(rightImage);
+    popup.appendChild(leftBubble);
     popup.appendChild(rightBubble);
+    popup.appendChild(leftText);
+    popup.appendChild(rightText);
 
-    // Append the popup to the body
+    let currentAudio = null;
+
+    // Function to play audio and wait for it to finish
+    function playAudio(base64Audio) {
+        return new Promise((resolve, reject) => {
+            if (!base64Audio) {
+                resolve();
+                return;
+            }
+
+            const audio = new Audio();
+            audio.src = `data:audio/mp3;base64,${base64Audio}`;
+
+            currentAudio = audio;
+
+            audio.onended = () => {
+                console.log('Audio finished playing');
+                resolve();
+            };
+
+            audio.onerror = (error) => {
+                console.error('Error playing audio:', error);
+                resolve();
+            };
+
+            audio.play().catch(error => {
+                console.error('Error playing audio:', error);
+                resolve();
+            });
+        });
+    }
+
+    // Function to display text gradually
+    async function displayText(message, textContainer, bubble) {
+        return new Promise((resolve) => {
+            bubble.style.display = 'block';
+            const words = message.text.split(' ');
+            let currentWord = 0;
+
+            function addWord() {
+                if (currentWord < words.length) {
+                    if (currentWord === 0) {
+                        textContainer.innerText = words[currentWord];
+                    } else {
+                        textContainer.innerText += ' ' + words[currentWord];
+                    }
+                    currentWord++;
+                    setTimeout(addWord, 350); // Adjust speed of word display here
+                } else {
+                    resolve();
+                }
+            }
+
+            addWord();
+        });
+    }
+
+    // Function to handle a single character's message
+    async function displayMessage(message) {
+        // Clear previous text and bubbles
+        leftText.innerText = '';
+        rightText.innerText = '';
+        leftBubble.style.display = 'none';
+        rightBubble.style.display = 'none';
+
+        const textContainer = message.character === 'Livvy' ? leftText : rightText;
+        const bubble = message.character === 'Livvy' ? leftBubble : rightBubble;
+
+        // Start both audio and text display simultaneously
+        const audioPromise = playAudio(message.audio);
+        const textPromise = displayText(message, textContainer, bubble);
+
+        // Wait for both to finish
+        await Promise.all([audioPromise, textPromise]);
+
+        // Add a small delay after both finish
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    // Function to handle the entire conversation
+    async function displayConversation() {
+        const messageArray = [
+            { character: 'Livvy', ...messages.encourage },
+            { character: 'Kai', ...messages.discourage }
+        ];
+
+        for (const message of messageArray) {
+            await displayMessage(message);
+        }
+    }
+
+    // Append popup to body
     document.body.appendChild(popup);
 
-    console.log('Popup created and appended to body');
-
-    // Trigger the fade-in effect after appending
+    // Start the conversation
     setTimeout(() => {
         popup.style.opacity = '1';
-        console.log('Popup fade-in triggered');
+        displayConversation();
     }, 10);
 }
 
@@ -152,10 +371,7 @@ async function initialize() {
         if (cartSection) {
             console.log('Cart section found, starting scrape');
             obs.disconnect(); // Stop observing
-            const cartData = await scrapeAmazonCart();
-            if (cartData && cartData.products.length > 0) {
-                showPopup(cartData);
-            }
+            await scrapeAmazonCart(); // Remove cartData assignment since we're showing popup directly in scrapeAmazonCart
         }
     });
 
