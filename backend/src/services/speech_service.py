@@ -138,7 +138,7 @@ class SpeechService:
                 )
                 
                 # Convert to speech with appropriate voice
-                voice = "onyx" if next_speaker == Character.KAI else "nova"
+                voice = "fable" if next_speaker == Character.KAI else "nova"
                 response_audio = await self.text_to_speech(response_text, voice)
                 
                 return {
@@ -160,17 +160,35 @@ class SpeechService:
         product_details: dict,
         previous_messages: Optional[List[Dict]]
     ) -> str:
-        """Generate a response for a specific character"""
+        """Generate a response considering budget threshold"""
         try:
+            # Get base personality prompt
+            personality = (
+                PersonaCharacteristics.get_livvy_prompt()
+                if character == Character.LIVVY
+                else PersonaCharacteristics.get_kai_prompt()
+            )
+
+            # Add threshold-specific guidance
+            price = product_details['price']
+            threshold = product_details['threshold']
+            if character == Character.LIVVY:
+                if price > threshold:
+                    personality += "\nThe item is over budget, so while staying positive, acknowledge the budget concern."
+                else:
+                    personality += "\nThe item is within budget, so emphasize the smart financial decision."
+            else:  # Kai
+                if price > threshold:
+                    personality += "\nThe item is over budget, so strongly emphasize the budget violation."
+                else:
+                    personality += "\nEven though it's within budget, question if it's the best use of money."
+
             prompt = self._build_character_prompt(character, product_details, previous_messages)
-            
+
             response = await self.client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content":
-                        PersonaCharacteristics.get_livvy_prompt() if character == Character.LIVVY
-                        else PersonaCharacteristics.get_kai_prompt()
-                    },
+                    {"role": "system", "content": personality},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.9
@@ -190,22 +208,40 @@ class SpeechService:
         previous_messages: Optional[List[Dict]]
     ) -> str:
         """Build a contextual prompt for character response"""
-        base_prompt = f"About this product: {product_details['title']} (${product_details['price']})"
         
+        price = product_details['price']
+        threshold = product_details['threshold']
+        price_difference = price - threshold
+        
+        budget_context = (
+            f"This item costs ${price:.2f}, which is ${abs(price_difference):.2f} "
+            f"{'over' if price_difference > 0 else 'under'} "
+            f"the budget threshold of ${threshold:.2f}."
+        )
+        
+        base_prompt = f"""About this product: {product_details['title']}
+        Price Context: {budget_context}"""
+        
+        if character == Character.LIVVY:
+            if price <= threshold:
+                base_prompt += "\nThe price is within budget - focus on value and positive aspects!"
+            else:
+                base_prompt += "\nThe price is over budget - focus on justifying the extra cost!"
+        else:  # Kai
+            if price <= threshold:
+                base_prompt += "\nEven though it's within budget, suggest if the money could be better used!"
+            else:
+                base_prompt += "\nStrongly emphasize how much it exceeds the budget!"
+
         if previous_messages:
             conversation = "\n".join([
                 f"{msg['character']}: {msg['text']}"
                 for msg in previous_messages[-2:]  # Last 2 messages for context
             ])
             base_prompt += f"\n\nPrevious conversation:\n{conversation}"
-        
-        if character == Character.LIVVY:
-            base_prompt += "\n\nRespond as Livvy Dunne, encouraging this purchase."
-        else:
-            base_prompt += "\n\nRespond as Kai Cenat, discouraging this purchase."
-            
+
         return base_prompt
-    
+
     async def text_to_speech(self, text: str, voice: Optional[str] = None) -> bytes:
         """
         Convert text to speech using OpenAI's text-to-speech API.

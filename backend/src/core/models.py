@@ -6,8 +6,8 @@ class ProductRequest(BaseModel):
     """Request model for product analysis"""
     title: str = Field(..., example="Sony WH-1000XM4 Headphones")
     price: float = Field(..., example=349.99)
-    description: Optional[str] = Field(None, example="Premium noise-canceling headphones")
-    previous_messages: Optional[List[Dict[str, Any]]] = None
+    threshold: int = Field(..., example=500)
+    # previous_messages: Optional[List[Dict[str, Any]]] = None
     
 class DebateMessage(BaseModel):
     """Structure for a single debate message"""
