@@ -428,7 +428,7 @@ function showPopup(debateData) {
 
         // Create a new image for the center
         const centerImage = document.createElement('img');
-        centerImage.src = chrome.runtime.getURL('CaseOh.jpg'); // Replace with your image file
+        centerImage.src = chrome.runtime.getURL('CaseOh.png'); // Replace with your image file
         centerImage.alt = 'Center Image';
         centerImage.classList.add('center-image'); // Add class for styling
 
