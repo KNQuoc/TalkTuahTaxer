@@ -259,22 +259,28 @@ function showPopup(debateData) {
     popup.appendChild(leftText);
     popup.appendChild(rightText);
 
-    async function streamAndPlayAudio(sessionId, character) {
+    async function streamAndPlayAudio(sessionId, character, preloadedBlob = null) {
         if (isClosing) return;
         try {
-            console.log(`Getting audio for session ${sessionId}, character ${character}`);
+            let blob;
+            if (preloadedBlob) {
+                blob = preloadedBlob;
+            } else {
+                console.log(`Getting audio for session ${sessionId}, character ${character}`);
 
-            const response = await fetch(`http://127.0.0.1:8000/api/v1/get-audio/${sessionId}/${character}`, {
-                headers: {
-                    'Accept': 'audio/mpeg'
+                const response = await fetch(`http://127.0.0.1:8000/api/v1/get-audio/${sessionId}/${character}`, {
+                    headers: {
+                        'Accept': 'audio/mpeg'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                blob = await response.blob();
             }
 
-            const blob = await response.blob();
+            // const blob = await response.blob();
             const audioUrl = URL.createObjectURL(blob);
             const audio = new Audio(audioUrl);
             currentAudio = audio; // Store reference to current audio
@@ -332,14 +338,16 @@ function showPopup(debateData) {
         });
     }
 
-    async function handleCharacterTurn(character, text) {
+    async function handleCharacterTurn(character, text, preloadedBlob = null) {
         try {
             const textContainer = character === 'Livvy' ? leftText : rightText;
             const bubble = character === 'Livvy' ? leftBubble : rightBubble;
-    
+
             // Prepare audio first
-            const audioPromise = streamAndPlayAudio(debateData.session_id, character.toLowerCase());
-            
+            const audioPromise = preloadedBlob ?
+                streamAndPlayAudio(debateData.session_id, character.toLowerCase(), preloadedBlob) :
+                streamAndPlayAudio(debateData.session_id, character.toLowerCase());
+
             // Only now show the popup when audio is ready
             if (character === 'Livvy') {
                 // Wait for audio to be ready
@@ -357,17 +365,17 @@ function showPopup(debateData) {
             } else {
                 bubble.style.display = 'block';
             }
-    
+
             // Start both audio and text display
             const textPromise = displayText({ text, character }, textContainer, bubble);
             await Promise.all([audioPromise, textPromise]);
-    
+
             // Hide bubble and text after completing
             if (!isClosing) {
                 bubble.style.display = 'none';
                 textContainer.innerText = '';
             }
-    
+
         } catch (error) {
             console.error(`Error during ${character}'s turn:`, error);
             if (!isClosing) {
@@ -391,17 +399,24 @@ function showPopup(debateData) {
                 throw new Error('Missing response text from API');
             }
 
+            // Start preloading Kai's audio while Livvy speaks
+            const preloadKaiAudio = fetch(`http://127.0.0.1:8000/api/v1/get-audio/${debateData.session_id}/kai`, {
+                headers: {
+                    'Accept': 'audio/mpeg'
+                }
+            }).then(response => response.blob());
+
             // Show Livvy's response first
             await handleCharacterTurn('Livvy', encourageText);
-            if (isClosing) return;
+
+            // By now, Kai's audio should be ready
+            const kaiBlob = await preloadKaiAudio;
 
             // Wait a moment before Kai's response
-            await new Promise(resolve => setTimeout(resolve, 500));
-            if (isClosing) return;
+            await new Promise(resolve => setTimeout(resolve, 200));
 
             // Show Kai's response
-            await handleCharacterTurn('Kai', discourageText);
-            if (isClosing) return;
+            await handleCharacterTurn('Kai', discourageText, kaiBlob);
 
             // Clear bubbles and text before showing decision buttons
             leftBubble.style.display = 'none';

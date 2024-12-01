@@ -153,11 +153,11 @@
 }
 
 .popup .overlay-text {
-  position: absolute;
-  top: 30%; /* Center vertically */
+  position: fixed;
+  top: 10%; /* Center vertically */
   left: 50%; /* Center horizontally */
   transform: translate(-50%, -50%);
-  font-size: 24px; /* Adjust text size */
+  font-size: 48px; /* Adjust text size */
   font-weight: bold;
   color: white; /* Text color */
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6); /* Optional: Add text shadow */
