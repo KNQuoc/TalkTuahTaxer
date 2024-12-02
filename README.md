@@ -14,7 +14,9 @@ It’s your no-nonsense spending buddy, ready to call you out before you hit Con
 </div>
 
 The arguments are based on your monthly budget, previous spending, and the items in your cart. By making you think twice about the pros and cons, **TalkTuahTaxer** helps you make more informed, mindful financial decisions before you proceed with any purchase.
-![CaseOh](talktuahtaxer/public/CaseOh.png)
+<div align="center">
+  <img src="talktuahtaxer/public/CaseOh.png" width="500"/>
+</div>
 
 ## How We Built It
 we built the user interface using react keeping it clean and sigma-worthy, The backend is the vanilla cream of Node.js and FastAPI. We used openAI for conversation between Kai Cenat, Livvy Dunne, and CaseOh. As for text-to-speech, we used ElevenLabs (Goated)
