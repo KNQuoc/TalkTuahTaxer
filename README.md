@@ -8,8 +8,7 @@ It’s your no-nonsense spending buddy, ready to call you out before you hit Con
 - **Kai Cenat**: Explains how buying this will give you negative aura and why you should not buy the item
 - **Livvy Dunne**: Lure you into buying the item by stating how it can help you.
 
-![Kai Cenat](talktuahtaxer/public/KaiCenat.png)
-![Livvy Dunne](talktuahtaxer/public/LivvyDunne.png)
+![Kai Cenat](talktuahtaxer/public/KaiCenat.png) ![Livvy Dunne](talktuahtaxer/public/LivvyDunne.png)
 The arguments are based on your monthly budget, previous spending, and the items in your cart. By making you think twice about the pros and cons, **TalkTuahTaxer** helps you make more informed, mindful financial decisions before you proceed with any purchase.
 ![CaseOh](talktuahtaxer/public/CaseOh.png)
 
